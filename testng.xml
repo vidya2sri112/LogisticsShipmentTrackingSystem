@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="Logistics Shipment Tracking - Full Test Suite" verbose="1" parallel="none">
+
+    <test name="Login Tests">
+        <classes>
+            <class name="tests.LoginTest"/>
+            <class name="tests.InvalidLoginNegativeTest"/>
+        </classes>
+    </test>
+
+    <test name="Portal Navigation Tests">
+        <classes>
+            <class name="tests.OpenShipmentPortalTest"/>
+        </classes>
+    </test>
+
+    <test name="Shipment Search Tests">
+        <classes>
+            <class name="tests.SearchForShipmentTest"/>
+        </classes>
+    </test>
+
+    <test name="Shipment Tracking Tests">
+        <classes>
+            <class name="tests.AddShipmentToTrackTest"/>
+        </classes>
+    </test>
+
+    <test name="Delivery Validation Tests">
+        <classes>
+            <class name="tests.CheckoutWithValidAddressTest"/>
+        </classes>
+    </test>
+
+</suite>

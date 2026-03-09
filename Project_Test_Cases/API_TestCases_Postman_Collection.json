@@ -1,0 +1,397 @@
+{
+  "info": {
+    "name": "Logistics Shipment Tracking System - API Test Collection",
+    "description": "Postman collection for API testing of Logistics Shipment Tracking System endpoints. Covers shipment creation, tracking, status updates, and authentication APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.logistics-tracking-demo.com/v1",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tracking_id",
+      "value": "TRK001234",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "TC_API_001 - Login with Valid Credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "    pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "});",
+                  "",
+                  "pm.test('Response time is less than 2000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "pm.test('Content-Type is application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@logistics.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "TC_API_002 - Login with Invalid Credentials Returns 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message present in response', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message.toLowerCase()).to.include('invalid');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wronguser@test.com\",\n  \"password\": \"wrongpass\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shipment Creation",
+      "item": [
+        {
+          "name": "TC_API_003 - Create New Shipment with Valid Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains tracking ID', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('tracking_id');",
+                  "    pm.expect(jsonData.tracking_id).to.be.a('string');",
+                  "    pm.collectionVariables.set('tracking_id', jsonData.tracking_id);",
+                  "});",
+                  "",
+                  "pm.test('Shipment status is Created', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('Created');",
+                  "});",
+                  "",
+                  "pm.test('Response time is less than 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sender\": {\n    \"name\": \"Rajesh Kumar\",\n    \"address\": \"123 Main Street, Mumbai - 400001\",\n    \"phone\": \"9876543210\"\n  },\n  \"receiver\": {\n    \"name\": \"Priya Sharma\",\n    \"address\": \"456 Park Avenue, Delhi - 110001\",\n    \"phone\": \"9123456789\"\n  },\n  \"shipment_details\": {\n    \"weight_kg\": 2.5,\n    \"type\": \"Standard\",\n    \"description\": \"Electronics\"\n  }\n}"
+            },
+            "url": "{{base_url}}/shipments"
+          }
+        },
+        {
+          "name": "TC_API_004 - Create Shipment Without Auth Returns 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 when no token', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sender\": { \"name\": \"Test\", \"address\": \"Test Address\", \"phone\": \"9000000000\" },\n  \"receiver\": { \"name\": \"Test Receiver\", \"address\": \"Test Dest\", \"phone\": \"9000000001\" },\n  \"shipment_details\": { \"weight_kg\": 1.0, \"type\": \"Express\" }\n}"
+            },
+            "url": "{{base_url}}/shipments"
+          }
+        },
+        {
+          "name": "TC_API_005 - Create Shipment with Missing Required Fields Returns 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 for missing fields', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Validation error details present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errors');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sender\": {}\n}"
+            },
+            "url": "{{base_url}}/shipments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shipment Tracking",
+      "item": [
+        {
+          "name": "TC_API_006 - GET Shipment by Valid Tracking ID Returns 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has tracking_id field', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('tracking_id');",
+                  "});",
+                  "",
+                  "pm.test('Response has status field', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData.status).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test('Response has sender and receiver info', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('sender');",
+                  "    pm.expect(jsonData).to.have.property('receiver');",
+                  "});",
+                  "",
+                  "pm.test('Response has status_history array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status_history');",
+                  "    pm.expect(jsonData.status_history).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": "{{base_url}}/shipments/track/{{tracking_id}}"
+          }
+        },
+        {
+          "name": "TC_API_007 - GET Shipment with Invalid Tracking ID Returns 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 for invalid tracking ID', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message.toLowerCase()).to.include('not found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": "{{base_url}}/shipments/track/INVALID_XYZ_999"
+          }
+        },
+        {
+          "name": "TC_API_008 - GET All Shipments Returns List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.shipments).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Pagination info present', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total');",
+                  "    pm.expect(jsonData).to.have.property('page');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/shipments?page=1&limit=10",
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shipment Status Update",
+      "item": [
+        {
+          "name": "TC_API_009 - Update Shipment Status to Picked Up",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Status updated to Picked Up', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('Picked Up');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Picked Up\",\n  \"updated_by\": \"courier_agent_01\",\n  \"location\": \"Mumbai Hub\"\n}"
+            },
+            "url": "{{base_url}}/shipments/{{tracking_id}}/status"
+          }
+        },
+        {
+          "name": "TC_API_010 - Update Status with Invalid Transition Returns 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 for invalid transition', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error indicates invalid transition', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message.toLowerCase()).to.include('invalid');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Delivered\",\n  \"updated_by\": \"agent_01\"\n}"
+            },
+            "url": "{{base_url}}/shipments/{{tracking_id}}/status"
+          }
+        }
+      ]
+    }
+  ]
+}
